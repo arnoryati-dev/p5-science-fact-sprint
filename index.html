@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P5 Science Fact Sprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: pinstripe page, ocean teal with pink and violet (P5). Topic chips on top, three mode tabs, one big working card below. */
+:root{
+  --paper:#eaf4f7;
+  --grid:#cfe2ea;
+  --ink:#0e3a4f;
+  --muted:#557286;
+  --card:#ffffff;
+  --line:#c8dbe3;
+  --accent:#ff9fb2;       /* pink highlighter */
+  --accent-ink:#3d0a14;
+  --blue:#6b46c1;
+  --good:#1f8a55;
+  --good-bg:#e0f3e7;
+  --bad:#c2384f;
+  --bad-bg:#fbe5e9;
+  --display:"Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0d2230; --grid:#163349; --ink:#e3f1f7; --muted:#9ab8c9; --card:#12304a; --line:#24496a;
+    --accent:#ff9db0; --accent-ink:#2d0610; --blue:#b39cff; --good:#5ad48f; --good-bg:#123326; --bad:#ff8a9c; --bad-bg:#3d1822;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0d2230; --grid:#163349; --ink:#e3f1f7; --muted:#9ab8c9; --card:#12304a; --line:#24496a;
+    --accent:#ff9db0; --accent-ink:#2d0610; --blue:#b39cff; --good:#5ad48f; --good-bg:#123326; --bad:#ff8a9c; --bad-bg:#3d1822;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background-color:var(--paper);
+  background-image:repeating-linear-gradient(45deg, var(--grid) 0 1.5px, transparent 1.5px 16px);
+  color:var(--ink); font-family:var(--body); font-size:18px; line-height:1.5;
+}
+.wrap{max-width:900px; margin:0 auto; padding:24px 16px 48px; display:flex; flex-direction:column; gap:18px}
+header{display:flex; flex-direction:column; gap:4px}
+h1{font-family:var(--display); font-weight:700; font-size:clamp(28px,5vw,40px); margin:0; line-height:1.1; text-wrap:balance}
+h1 mark{background:linear-gradient(transparent 55%, var(--accent) 55%); color:inherit; padding:0 4px}
+.sub{color:var(--muted); margin:0; font-size:16px}
+h2{font-family:var(--display); font-weight:600; font-size:15px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0}
+.panel{background:var(--card); border:2px solid var(--line); border-radius:14px; padding:16px}
+.topics{display:flex; flex-direction:column; gap:10px}
+.topic-head{display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{font:inherit; font-size:15px; border:2px solid var(--line); background:transparent; color:var(--ink); border-radius:999px; padding:6px 12px; cursor:pointer; display:inline-flex; gap:6px; align-items:center}
+.chip .theme{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--ink); color:var(--paper); border-color:var(--ink)}
+.chip[aria-pressed="true"] .theme{color:var(--accent)}
+.linkbtn{font:inherit; font-size:14px; background:none; border:none; color:var(--blue); cursor:pointer; text-decoration:underline; padding:2px 4px}
+.tabs{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.tab{font-family:var(--display); font-weight:600; font-size:18px; border:2px solid var(--line); background:var(--card); color:var(--ink); border-radius:12px; padding:10px 8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:0}
+.tab small{font-family:var(--body); font-weight:400; font-size:13px; color:var(--muted)}
+.tab[aria-selected="true"]{border-color:var(--ink); background:var(--accent); color:var(--accent-ink); box-shadow:0 4px 0 var(--ink)}
+.tab[aria-selected="true"] small{color:var(--accent-ink)}
+button:focus-visible,.blank:focus-visible{outline:3px solid var(--blue); outline-offset:2px}
+.btn{font-family:var(--display); font-weight:600; font-size:17px; border:2px solid var(--ink); background:var(--card); color:var(--ink); border-radius:10px; padding:9px 16px; cursor:pointer}
+.btn.primary{background:var(--ink); color:var(--paper)}
+.btn.good{border-color:var(--good); color:var(--good)}
+.btn.bad{border-color:var(--bad); color:var(--bad)}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+.row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+.row.between{justify-content:space-between}
+.meta{color:var(--muted); font-size:15px; font-variant-numeric:tabular-nums}
+.tag{display:inline-block; font-size:13px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--blue)}
+[hidden]{display:none !important}
+
+.pics{display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start}
+.pics img{max-width:100%; max-height:230px; border-radius:10px; border:2px solid var(--line); background:#fff; object-fit:contain}
+.flash .pics img{max-height:250px}
+@media (max-width:480px){ .pics img{max-height:170px} }
+
+/* Flashcards */
+.flash{min-height:260px; border:2px solid var(--ink); border-radius:16px; background:var(--card); padding:24px; display:flex; flex-direction:column; justify-content:center; gap:14px; cursor:pointer; box-shadow:6px 6px 0 var(--line); text-align:left; width:100%; font:inherit; color:inherit}
+.flash .q{font-family:var(--display); font-weight:600; font-size:clamp(22px,3.6vw,30px); line-height:1.25; text-wrap:balance}
+.flash .a{font-size:20px; border-top:2px dashed var(--line); padding-top:14px}
+.flash .a strong{background:linear-gradient(transparent 55%, var(--accent) 55%)}
+.flash .hint{color:var(--muted); font-size:14px}
+.tally{display:flex; gap:14px}
+.tally span{font-variant-numeric:tabular-nums}
+
+/* Fill the gaps */
+.passage{font-size:21px; line-height:2.1}
+.blank{display:inline-block; min-width:110px; border:none; border-bottom:3px solid var(--ink); background:transparent; color:var(--ink); font:inherit; font-weight:700; padding:0 6px; margin:0 2px; cursor:pointer; text-align:center; line-height:1.4; border-radius:4px 4px 0 0}
+.blank.active{background:var(--accent); color:var(--accent-ink)}
+.blank.right{border-color:var(--good); background:var(--good-bg); color:var(--good)}
+.blank.wrong{border-color:var(--bad); background:var(--bad-bg); color:var(--bad)}
+.bank{display:flex; flex-wrap:wrap; gap:8px; padding:12px; border:2px dashed var(--line); border-radius:12px}
+.word{font:inherit; font-size:18px; font-weight:700; border:2px solid var(--blue); color:var(--blue); background:var(--card); border-radius:8px; padding:6px 12px; cursor:pointer}
+.word.used{opacity:.3; text-decoration:line-through}
+.result{font-family:var(--display); font-weight:600; font-size:18px}
+.result.good{color:var(--good)} .result.bad{color:var(--bad)}
+
+/* Sprint */
+.sprint-top{display:flex; gap:12px; flex-wrap:wrap}
+.stat{flex:1 1 120px; border:2px solid var(--line); border-radius:12px; padding:8px 12px; background:var(--card)}
+.stat b{display:block; font-family:var(--display); font-size:30px; line-height:1.1; font-variant-numeric:tabular-nums}
+.stat span{font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em}
+.timerbar{height:10px; border-radius:999px; background:var(--grid); overflow:hidden}
+.timerbar i{display:block; height:100%; background:var(--ink); width:100%; transition:width 1s linear}
+.timerbar.low i{background:var(--bad)}
+.sq{font-family:var(--display); font-weight:600; font-size:clamp(22px,3.6vw,28px); line-height:1.25; margin:0; text-wrap:balance}
+.opts{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px}
+.opt{font:inherit; font-size:19px; font-weight:700; text-align:left; border:2px solid var(--ink); border-radius:12px; background:var(--card); color:var(--ink); padding:12px 14px; cursor:pointer; display:flex; gap:10px; align-items:center}
+.opt kbd{font-family:var(--display); font-size:14px; border:2px solid var(--line); border-radius:6px; padding:0 7px; color:var(--muted)}
+.opt.right{background:var(--good-bg); border-color:var(--good); color:var(--good)}
+.opt.wrong{background:var(--bad-bg); border-color:var(--bad); color:var(--bad)}
+.big{font-family:var(--display); font-weight:700; font-size:56px; line-height:1}
+.misses{margin:0; padding-left:20px; display:flex; flex-direction:column; gap:6px}
+.misses li span{color:var(--good); font-weight:700}
+.stack{display:flex; flex-direction:column; gap:14px}
+.note{font-size:14px; color:var(--muted); margin:0}
+@media (max-width:480px){
+  body{font-size:17px}
+  .tab{font-size:16px}
+  .passage{font-size:19px}
+  .blank{min-width:90px}
+}
+@media (prefers-reduced-motion: reduce){ .timerbar i{transition:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>P5 Science <mark>Fact Sprint</mark></h1>
+    <p class="sub">Quick revision of the key facts from the P5 Science revision cards. Choose your topics, then pick a mode.</p>
+  </header>
+
+  <section class="panel topics" aria-labelledby="topics-h">
+    <div class="topic-head">
+      <h2 id="topics-h">Topics</h2>
+      <div><button class="linkbtn" id="all">Select all</button><button class="linkbtn" id="none">Clear</button></div>
+    </div>
+    <div class="chips" id="chips"></div>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="Revision mode">
+    <button class="tab" role="tab" id="tab-cards" data-mode="cards">Flashcards<small>Learn the facts</small></button>
+    <button class="tab" role="tab" id="tab-gaps" data-mode="gaps">Fill the Gaps<small>Use the word bank</small></button>
+    <button class="tab" role="tab" id="tab-sprint" data-mode="sprint">60s Sprint<small>Fast and accurate</small></button>
+  </nav>
+
+  <!-- FLASHCARDS -->
+  <section class="panel stack" id="mode-cards" role="tabpanel" aria-labelledby="tab-cards">
+    <div class="row between">
+      <span class="meta" id="fc-count"></span>
+      <div class="tally meta"><span>Knew it: <b id="fc-know">0</b></span><span>Still learning: <b id="fc-learn">0</b></span></div>
+    </div>
+    <button class="flash" id="fc-card" aria-live="polite">
+      <span class="tag" id="fc-topic"></span>
+      <span class="q" id="fc-q"></span>
+      <span class="pics" id="fc-qpics" hidden></span>
+      <span class="a" id="fc-a" hidden></span>
+      <span class="pics" id="fc-apics" hidden></span>
+      <span class="hint" id="fc-hint">Say your answer out loud, then tap the card (or press Space) to check.</span>
+    </button>
+    <div class="row between">
+      <div class="row">
+        <button class="btn" id="fc-prev">← Back</button>
+        <button class="btn" id="fc-shuffle">Shuffle</button>
+      </div>
+      <div class="row">
+        <button class="btn bad" id="fc-no">Still learning</button>
+        <button class="btn good" id="fc-yes">Knew it ✓</button>
+      </div>
+    </div>
+    <div class="row">
+      <button class="linkbtn" id="fc-review" hidden>Review only my "still learning" cards</button>
+      <button class="linkbtn" id="fc-reset">Start the deck again</button>
+    </div>
+  </section>
+
+  <!-- FILL THE GAPS -->
+  <section class="panel stack" id="mode-gaps" role="tabpanel" aria-labelledby="tab-gaps" hidden>
+    <div class="row between">
+      <span class="tag" id="g-topic"></span>
+      <span class="meta" id="g-count"></span>
+    </div>
+    <h3 class="sq" id="g-title"></h3>
+    <div class="pics" id="g-pics" hidden></div>
+    <div class="bank" id="g-bank" aria-label="Word bank"></div>
+    <p class="passage" id="g-text"></p>
+    <p class="note">Tap a blank, then tap a word. Tap a filled blank to empty it.</p>
+    <div class="row between">
+      <div class="row">
+        <button class="btn primary" id="g-check">Check</button>
+        <button class="btn" id="g-show">Show answers</button>
+        <button class="btn" id="g-clear">Clear</button>
+      </div>
+      <div class="row">
+        <button class="btn" id="g-prev">← Back</button>
+        <button class="btn" id="g-next">Next →</button>
+      </div>
+    </div>
+    <div class="result" id="g-result" aria-live="polite"></div>
+  </section>
+
+  <!-- SPRINT -->
+  <section class="panel stack" id="mode-sprint" role="tabpanel" aria-labelledby="tab-sprint" hidden>
+    <div id="sp-start" class="stack">
+      <h3 class="sq">How many facts can you get right in 60 seconds?</h3>
+      <p style="margin:0">Each correct answer scores 1 point. Every 5 correct in a row earns a bonus point. Wrong answers do not lose points, but they appear at the end so you know what to revise.</p>
+      <p class="note">On a keyboard, press 1–4 to answer.</p>
+      <div class="row"><button class="btn primary" id="sp-go">Start sprint</button><span class="meta" id="sp-best"></span></div>
+    </div>
+    <div id="sp-play" class="stack" hidden>
+      <div class="sprint-top">
+        <div class="stat"><span>Time</span><b id="sp-time">60</b></div>
+        <div class="stat"><span>Score</span><b id="sp-score">0</b></div>
+        <div class="stat"><span>Streak</span><b id="sp-streak">0</b></div>
+      </div>
+      <div class="timerbar" id="sp-bar"><i id="sp-fill"></i></div>
+      <span class="tag" id="sp-topic"></span>
+      <p class="sq" id="sp-q" aria-live="polite"></p>
+      <div class="pics" id="sp-pics" hidden></div>
+      <div class="opts" id="sp-opts"></div>
+    </div>
+    <div id="sp-end" class="stack" hidden>
+      <div class="row" style="gap:24px">
+        <div><div class="big" id="sp-final">0</div><div class="meta">points</div></div>
+        <div class="meta" id="sp-summary"></div>
+      </div>
+      <div id="sp-miss-wrap" class="stack">
+        <h2>Facts to revise</h2>
+        <ol class="misses" id="sp-misses"></ol>
+      </div>
+      <div class="row"><button class="btn primary" id="sp-again">Sprint again</button></div>
+    </div>
+  </section>
+
+  <p class="note">Content and pictures adapted from the P5 Science Revision Cards (Science teachers of Yangzheng Primary School).</p>
+</div>
+
+<script>
+const TOPICS = [
+  {id:"transport", name:"Plant transport",      theme:"Systems"},
+  {id:"air",       name:"Air & respiration",    theme:"Systems"},
+  {id:"circ",      name:"Circulatory system",   theme:"Systems"},
+  {id:"elec",      name:"Electrical system",    theme:"Systems"},
+  {id:"plantrep",  name:"Plant reproduction",   theme:"Cycles"},
+  {id:"humanrep",  name:"Human reproduction",   theme:"Cycles"},
+  {id:"water",     name:"Changes of state",     theme:"Cycles"},
+  {id:"wcycle",    name:"Water cycle",          theme:"Cycles"}
+];
+const TNAME = Object.fromEntries(TOPICS.map(t=>[t.id,t.name]));
+
+/* ---------- Flashcards: [topic, question, answer(HTML ok)] ---------- */
+const CARDS = [
+ ["transport","What is a plant's transport system made up of?","Two separate sets of <strong>fine tubes</strong> that run through the <strong>leaves, stems and roots</strong>."],
+ ["transport","What do the water-carrying tubes transport?","<strong>Water and mineral salts</strong> from the <strong>roots</strong> to the other parts of the plant."],
+ ["transport","What do the food-carrying tubes transport?","<strong>Sugar</strong> made in the <strong>leaves</strong> to all other parts of the plant."],
+ ["air","What is air made up of?","About <strong>four-fifths nitrogen</strong>, about <strong>one-fifth oxygen</strong>, and small amounts of <strong>carbon dioxide, water vapour and other gases</strong>."],
+ ["air","What do most living things take in and give out to stay alive?","They take in <strong>oxygen</strong> and give out <strong>carbon dioxide</strong>."],
+ ["air","What are the main organs of the human respiratory system?","<strong>Nose, windpipe</strong> and <strong>lungs</strong>."],
+ ["air","Where does gaseous exchange take place in leaves?","Through tiny openings called <strong>stomata</strong>."],
+ ["circ","What are the 3 parts of the human circulatory system?","<strong>Heart, blood vessels</strong> and <strong>blood</strong>."],
+ ["circ","What does the heart do?","<strong>Pumps blood</strong> to all parts of the body."],
+ ["circ","What do blood vessels do?","Transport blood <strong>from the heart</strong> to all parts of the body and <strong>back to the heart</strong>."],
+ ["circ","What does blood transport?","<strong>Digested food, oxygen, carbon dioxide, water</strong> and <strong>waste materials</strong>."],
+ ["circ","Which blood vessels carry blood rich in oxygen? Which carry blood rich in carbon dioxide?","Red arrows: blood with <strong>more oxygen</strong> and less carbon dioxide. Blue arrows: blood with <strong>more carbon dioxide</strong> and less oxygen."],
+ ["elec","What makes up a simple electric circuit?","A <strong>battery</strong>, <strong>wires</strong> and a <strong>bulb</strong>. An <strong>electric current</strong> flows through a properly connected circuit."],
+ ["elec","What do the battery, wires and switch do?","Battery: <strong>energy source</strong>. Wires: <strong>connect</strong> the parts together. Switch: <strong>controls the flow</strong> of electric current."],
+ ["elec","What is the difference between a closed and an open circuit?","Closed circuit: electric current <strong>flows</strong> through. Open circuit: electric current <strong>does not flow</strong> through."],
+ ["elec","What does a bulb convert? Name its parts.","<strong>Electrical energy</strong> to <strong>light and heat energy</strong>. Parts: <strong>filament, glass bulb, metal casing, metal tip</strong>."],
+ ["elec","Name the circuit symbols.","<strong>Battery, open switch, closed switch, bulb</strong> and <strong>wire</strong>."],
+ ["elec","What are electrical conductors? Give examples.","Materials that <strong>allow</strong> electric current to flow through them. <strong>Metals</strong>, e.g. aluminium, iron, copper, silver, gold."],
+ ["elec","What are electrical insulators? Give examples.","Materials that <strong>do not allow</strong> electric current to flow through them, e.g. <strong>plastic, glass, clay, paper, cotton, rubber, wood</strong>."],
+ ["elec","What happens when more bulbs are arranged in series?","Each bulb becomes <strong>dimmer</strong>, because <strong>less current</strong> flows through each bulb."],
+ ["elec","What happens when more batteries are arranged in series?","Each bulb becomes <strong>brighter</strong>, because <strong>more current</strong> flows through each bulb."],
+ ["plantrep","What are the female parts of a flower?","<strong>Stigma, style, ovary</strong> and <strong>ovules</strong>. The female reproductive cells are in the <strong>ovules</strong>."],
+ ["plantrep","What are the male parts of a flower?","<strong>Anther</strong> and <strong>filament</strong>. The male reproductive cells are in the <strong>pollen grains</strong> (in the anther)."],
+ ["plantrep","What is pollination?","The <strong>transfer of pollen grains</strong> from the <strong>anther</strong> to the <strong>stigma</strong> of a flower."],
+ ["plantrep","What happens after a pollen grain lands on the stigma?","It produces a <strong>pollen tube</strong> that grows down the <strong>style</strong> to the <strong>ovule</strong>. The <strong>male cell</strong> fuses with the <strong>egg cell</strong>: <strong>fertilisation</strong> is complete."],
+ ["plantrep","What happens to the flower after fertilisation?","The <strong>petals wither</strong> and the <strong>ovary swells</strong> into a fruit. <strong>Seeds</strong> develop inside the fruit as it grows bigger."],
+ ["plantrep","What is overcrowding?","Young plants <strong>compete</strong> with one another for <strong>space, sunlight, water</strong> and <strong>minerals</strong>, leading to poor growth."],
+ ["plantrep","Name the 4 methods of fruit and seed dispersal.","<strong>Wind, water, explosive action (splitting)</strong> and <strong>animals</strong>."],
+ ["plantrep","What are fruits and seeds dispersed by wind like?","<strong>Dry and light</strong>, often with a <strong>wing-like structure</strong>, so they are easily carried by wind."],
+ ["plantrep","How do animals disperse seeds?","Seeds are <strong>thrown away</strong>, <strong>passed out in droppings</strong>, or <strong>attach</strong> to animals using <strong>hooks or stiff hairs</strong>."],
+ ["plantrep","What are fruits dispersed by water like?","They have <strong>fibrous husks</strong> that trap air, or <strong>waterproof coverings</strong>, to help them float."],
+ ["plantrep","How does explosive action disperse seeds?","The fruit <strong>splits open forcefully</strong> when ripe to release the seeds."],
+ ["plantrep","What are the parts of a seed?","The <strong>seed leaf</strong> and the <strong>baby plant</strong>."],
+ ["plantrep","What 3 conditions does a seed need to germinate?","<strong>W</strong>ater, <strong>O</strong>xygen (air) and <strong>W</strong>armth: <strong>WOW!</strong>"],
+ ["plantrep","How do non-flowering plants reproduce?","By <strong>spores</strong>."],
+ ["humanrep","What are the male reproductive parts?","The <strong>testes</strong> and <strong>penis</strong>. The male reproductive cells, <strong>sperms</strong>, are produced in the testes."],
+ ["humanrep","What are the female reproductive parts?","The <strong>ovaries, womb</strong> and <strong>vagina</strong>. The female reproductive cells, <strong>eggs</strong>, are produced in the ovaries."],
+ ["humanrep","What is fertilisation in humans?","The <strong>fusion of one sperm and the egg</strong>."],
+ ["humanrep","Where does the fertilised egg develop, and for how long?","In the <strong>womb</strong>, for about <strong>nine months</strong> before the baby is born."],
+ ["water","What are the 3 states of water?","Solid: <strong>ice</strong>. Liquid: <strong>water</strong>. Gas: <strong>steam</strong> or <strong>water vapour</strong>."],
+ ["water","Name the process: ice gains heat and turns into water.","<strong>Melting</strong>."],
+ ["water","Name the process: water gains heat and turns into steam or water vapour.","<strong>Boiling</strong> or <strong>evaporation</strong>."],
+ ["water","Name the process: water loses heat and turns into ice.","<strong>Freezing</strong>."],
+ ["water","Name the process: steam or water vapour loses heat and turns into water.","<strong>Condensation</strong>."],
+ ["water","What are the freezing point and boiling point of water?","Freezing point of water = melting point of ice = <strong>0 °C</strong>. Boiling point of water = <strong>100 °C</strong>."],
+ ["wcycle","What is the water cycle?","The movement of water from the <strong>Earth to the sky</strong> and <strong>back to the Earth</strong> in a <strong>continuous</strong> way."],
+ ["wcycle","Name the 3 processes shown in the water cycle.","<strong>Evaporation</strong> (water to water vapour), <strong>condensation</strong> (water vapour to water droplets) and <strong>precipitation</strong> (rain)."],
+ ["wcycle","Why is water important to humans and plants?","Humans: <strong>digestion</strong>, transport of substances. Plants: <strong>germination, photosynthesis</strong>, transport of substances."]
+];
+
+/* ---------- Fill the Gaps: text uses [answer]; extra = decoy words ---------- */
+const GAPS = [
+ {t:"transport", title:"Plant transport system", text:"A plant's transport system is made up of two separate sets of fine tubes that run through the [leaves], [stems] and [roots]. Water-carrying tubes transport [water] and [mineral salts] from the roots to the other parts of the plant. Food-carrying tubes transport [sugar] made in the leaves to all other parts of the plant.", extra:["oxygen"]},
+ {t:"air", title:"Composition of air", text:"Most living things take in [oxygen] and give out [carbon dioxide] to stay alive. About one-fifth of the air is made up of oxygen and about four-fifths is made up of [nitrogen].", extra:["water vapour"]},
+ {t:"air", title:"Respiratory systems", text:"The main organs of the human respiratory system are the [nose], [windpipe] and [lungs]. [Gaseous] exchange in leaves takes place through tiny openings called [stomata].", extra:["heart"]},
+ {t:"circ", title:"Circulatory system", text:"The human circulatory system is made up of the [heart], [blood vessels] and [blood]. The heart [pumps] blood to all parts of the body. Blood transports digested food, [oxygen], carbon dioxide, water and waste materials.", extra:["lungs"]},
+ {t:"elec", title:"A simple circuit", text:"A simple electric circuit is made up of electrical parts such as a [battery], [wires] and a [bulb]. An [electric current] flows through a properly connected electrical circuit. A [switch] controls the flow of electric current.", extra:["magnet"]},
+ {t:"elec", title:"Conductors and insulators", text:"Materials that allow electric current to flow through them are called electrical [conductors]. [Metals] allow electricity to pass through them. Materials that do not allow electric current to flow through them are called electrical [insulators], such as [plastic] and rubber.", extra:["copper"]},
+ {t:"elec", title:"Bulbs and batteries in series", text:"A bulb becomes [dimmer] when we arrange more [bulbs] in series, because [less] current flows through each bulb. A bulb becomes [brighter] when we arrange more [batteries] in series, because [more] current flows through each bulb.", extra:[]},
+ {t:"plantrep", title:"Parts of a flower", text:"The female parts of the flower are the [stigma], [style], [ovary] and ovules. The female reproductive cells are found in the [ovules]. The male parts of the flower are the [anther] and [filament].", extra:["petal"]},
+ {t:"plantrep", title:"Pollination and fertilisation", text:"[Pollination] is the transfer of pollen grains from the anther to the [stigma] of a flower. A pollen grain produces a pollen [tube] that grows down the style to the ovule. When the male cell fuses with the [egg] cell, [fertilisation] is complete.", extra:["root"]},
+ {t:"plantrep", title:"Overcrowding", text:"Young plants [compete] with one another for [space], [sunlight], [water] and minerals, leading to poor growth. To reduce overcrowding, fruits and seeds are [dispersed].", extra:["oxygen"]},
+ {t:"plantrep", title:"Dispersal", text:"Fruits dispersed by wind are dry and light and may have a [wing-like] structure. Some fruits attach to animals using [hooks] or stiff hairs. Fruits dispersed by water have [fibrous] husks that trap air. Fruits dispersed by explosive action [split] open forcefully when ripe.", extra:["heavy"]},
+ {t:"plantrep", title:"Germination", text:"A seed has a seed [leaf] and a [baby] plant. A seed needs [water], [oxygen] and [warmth] to germinate. Non-flowering plants reproduce by [spores].", extra:["light"]},
+ {t:"humanrep", title:"Human reproduction", text:"The male reproductive cells, called [sperms], are produced in the [testes]. The female reproductive cells, called [eggs], are produced in the [ovaries]. The fusion of one sperm and the egg is known as [fertilisation]. The fertilised egg develops in the [womb] for about nine [months].", extra:[]},
+ {t:"water", title:"States of water", text:"Water exists in three states. The solid form of water is [ice]. The liquid form of water is [water]. The gaseous form of water is [steam] or water vapour.", extra:["sugar"]},
+ {t:"water", title:"Changes of state", text:"Ice gains heat and turns into water by [melting]. Water gains heat and turns into steam by [boiling]. Water loses heat and turns into ice by [freezing]. Steam loses heat and turns into water by [condensation]. Water freezes at [0 °C] and boils at [100 °C].", extra:["50 °C"]},
+ {t:"wcycle", title:"The water cycle", text:"The water cycle is the movement of water from the Earth to the sky and back to the Earth in a [continuous] way. Water is important for humans for [digestion] and for plants for [germination] and [photosynthesis].", extra:["evaporation"]}
+];
+
+/* ---------- Sprint: [topic, question, correct, [wrong...]] ---------- */
+const TF = ["True","False"];
+const SPRINT = [
+ ["transport","Water-carrying tubes transport water and ___ from the roots.","mineral salts",["sugar","oxygen","pollen"]],
+ ["transport","Food-carrying tubes transport ___ made in the leaves.","sugar",["water","mineral salts","carbon dioxide"]],
+ ["transport","Where does the sugar in food-carrying tubes come from?","Leaves",["Roots","Soil","Flowers"]],
+ ["transport","A plant's transport tubes run through the leaves, stems and roots.","True",["False"]],
+ ["transport","Water-carrying tubes carry water from the leaves to the roots.","False",["True"]],
+ ["air","About four-fifths of air is ___.","nitrogen",["oxygen","carbon dioxide","water vapour"]],
+ ["air","About one-fifth of air is ___.","oxygen",["nitrogen","carbon dioxide","helium"]],
+ ["air","Most living things take in ___ to stay alive.","oxygen",["carbon dioxide","nitrogen","water vapour"]],
+ ["air","Most living things give out ___.","carbon dioxide",["oxygen","nitrogen","helium"]],
+ ["air","Which is NOT a main organ of the human respiratory system?","Heart",["Nose","Windpipe","Lungs"]],
+ ["air","Gaseous exchange in leaves takes place through tiny openings called ___.","stomata",["roots","veins","pores in stems"]],
+ ["air","Air is mostly made up of oxygen.","False",["True"]],
+ ["circ","Which part of the circulatory system pumps blood?","Heart",["Lungs","Blood vessels","Stomach"]],
+ ["circ","Which part transports digested food, oxygen and waste?","Blood",["Heart","Windpipe","Gullet"]],
+ ["circ","Blood vessels carry blood from the heart to the body and back.","True",["False"]],
+ ["circ","Blood vessels shown with red arrows carry blood rich in ___.","oxygen",["carbon dioxide","nitrogen","sugar"]],
+ ["circ","Blood vessels shown with blue arrows carry blood rich in ___.","carbon dioxide",["oxygen","water","mineral salts"]],
+ ["circ","The lungs are part of the circulatory system.","False",["True"]],
+ ["elec","Which part is the energy source in a circuit?","Battery",["Wire","Switch","Bulb"]],
+ ["elec","Which part controls the flow of electric current?","Switch",["Battery","Bulb","Wire"]],
+ ["elec","Which part connects the electrical parts together?","Wires",["Switch","Battery","Bulb"]],
+ ["elec","Electric current flows through a ___ circuit.","closed",["open","broken","switched-off"]],
+ ["elec","Electric current flows through an open circuit.","False",["True"]],
+ ["elec","A bulb converts electrical energy to light and ___ energy.","heat",["sound","kinetic","chemical"]],
+ ["elec","Which is a part of a bulb?","Filament",["Anther","Stigma","Ovule"]],
+ ["elec","Which material is an electrical conductor?","Copper",["Plastic","Rubber","Wood"]],
+ ["elec","Which material is an electrical insulator?","Rubber",["Iron","Aluminium","Silver"]],
+ ["elec","Metals allow electricity to pass through them.","True",["False"]],
+ ["elec","More bulbs in series make each bulb ___.","dimmer",["brighter","the same","hotter"]],
+ ["elec","More batteries in series make each bulb ___.","brighter",["dimmer","the same","go out"]],
+ ["elec","With more bulbs in series, ___ current flows through each bulb.","less",["more","the same","no"]],
+ ["plantrep","Which is a female part of a flower?","Stigma",["Anther","Filament","Petal"]],
+ ["plantrep","Which is a male part of a flower?","Anther",["Ovary","Style","Ovule"]],
+ ["plantrep","The female reproductive cells of a flower are found in the ___.","ovules",["anther","filament","petals"]],
+ ["plantrep","Pollination is the transfer of pollen grains from the anther to the ___.","stigma",["ovary","filament","petal"]],
+ ["plantrep","The pollen tube grows down the ___ to reach the ovule.","style",["filament","anther","stem"]],
+ ["plantrep","After fertilisation, the ovary swells into a ___.","fruit",["leaf","flower","root"]],
+ ["plantrep","After fertilisation, the ovules develop into ___.","seeds",["petals","pollen","stems"]],
+ ["plantrep","Overcrowded young plants compete for space, sunlight, water and ___.","minerals",["oxygen only","pollen","spores"]],
+ ["plantrep","Fruits with a wing-like structure are dispersed by ___.","wind",["water","animals","explosive action"]],
+ ["plantrep","Fruits with hooks or stiff hairs are dispersed by ___.","animals",["wind","water","explosive action"]],
+ ["plantrep","Fruits with fibrous husks are dispersed by ___.","water",["wind","animals","explosive action"]],
+ ["plantrep","Fruits that split open forcefully are dispersed by ___.","explosive action",["wind","water","animals"]],
+ ["plantrep","Which is NOT needed for germination?","Light",["Water","Oxygen","Warmth"]],
+ ["plantrep","Non-flowering plants reproduce by ___.","spores",["seeds","pollen","fruits"]],
+ ["plantrep","Dispersal helps to reduce overcrowding.","True",["False"]],
+ ["humanrep","Sperms are produced in the ___.","testes",["ovaries","womb","stomach"]],
+ ["humanrep","Eggs are produced in the ___.","ovaries",["testes","womb","lungs"]],
+ ["humanrep","The fertilised egg develops in the ___.","womb",["ovaries","testes","stomach"]],
+ ["humanrep","The fusion of one sperm and the egg is called ___.","fertilisation",["pollination","dispersal","germination"]],
+ ["humanrep","A baby develops in the womb for about ___.","nine months",["nine weeks","three months","one year"]],
+ ["water","The solid form of water is ___.","ice",["steam","water vapour","rain"]],
+ ["water","The gaseous form of water is ___.","water vapour",["ice","rain","frost"]],
+ ["water","Ice gains heat and turns into water. This is ___.","melting",["freezing","condensation","boiling"]],
+ ["water","Water loses heat and turns into ice. This is ___.","freezing",["melting","evaporation","boiling"]],
+ ["water","Water vapour loses heat and turns into water. This is ___.","condensation",["evaporation","melting","freezing"]],
+ ["water","Water gains heat and turns into water vapour. This is ___.","evaporation",["condensation","freezing","melting"]],
+ ["water","The boiling point of water is ___.","100 °C",["0 °C","50 °C","37 °C"]],
+ ["water","The freezing point of water is ___.","0 °C",["100 °C","10 °C","-100 °C"]],
+ ["water","The melting point of ice and the freezing point of water are the same.","True",["False"]],
+ ["water","Condensation happens when water vapour gains heat.","False",["True"]],
+ ["wcycle","The water cycle moves water between the Earth and the sky in a ___ way.","continuous",["one-time","random","slow-stopping"]],
+ ["wcycle","Water turning into water vapour in the water cycle is called ___.","evaporation",["condensation","precipitation","freezing"]],
+ ["wcycle","Water vapour turning into water droplets in clouds is called ___.","condensation",["evaporation","melting","precipitation"]],
+ ["wcycle","Rain falling from clouds is called ___.","precipitation",["evaporation","condensation","melting"]],
+ ["wcycle","Plants need water for photosynthesis and germination.","True",["False"]],
+ ["wcycle","Humans need water for ___.","digestion",["photosynthesis","pollination","germination"]]
+];
+
+/* ---------- pictures from the revision cards ---------- */
+const IMG_DIR="img/";
+const CARD_IMG={
+"What is air made up of?": {
+"q": [
+"s05.jpg"
+],
+"a": [
+"s06.jpg"
+]
+},
+"What are the main organs of the human respiratory system?": {
+"q": [
+"lungs.jpg"
+],
+"a": [
+"s10.jpg"
+]
+},
+"Where does gaseous exchange take place in leaves?": {
+"q": [
+"s12.jpg"
+]
+},
+"What are the 3 parts of the human circulatory system?": {
+"q": [
+"circparts.jpg"
+]
+},
+"What does blood transport?": {
+"a": [
+"s16.jpg"
+]
+},
+"What does the heart do?": {
+"a": [
+"s16.jpg"
+]
+},
+"Which blood vessels carry blood rich in oxygen? Which carry blood rich in carbon dioxide?": {
+"q": [
+"circflow.jpg"
+],
+"a": [
+"s18.jpg"
+]
+},
+"What makes up a simple electric circuit?": {
+"q": [
+"circuit.jpg"
+]
+},
+"What does a bulb convert? Name its parts.": {
+"a": [
+"s23.jpg"
+]
+},
+"Name the circuit symbols.": {
+"q": [
+"s24.jpg"
+],
+"a": [
+"s25.jpg"
+]
+},
+"What are electrical conductors? Give examples.": {
+"a": [
+"s26.jpg"
+]
+},
+"What are electrical insulators? Give examples.": {
+"a": [
+"s28.jpg"
+]
+},
+"What are the female parts of a flower?": {
+"q": [
+"flower.jpg"
+],
+"a": [
+"s34.jpg"
+]
+},
+"What are the male parts of a flower?": {
+"q": [
+"flower.jpg"
+],
+"a": [
+"s36.jpg"
+]
+},
+"What is pollination?": {
+"a": [
+"s38.jpg"
+]
+},
+"What happens after a pollen grain lands on the stigma?": {
+"q": [
+"fert.jpg"
+],
+"a": [
+"s41.jpg"
+]
+},
+"What happens to the flower after fertilisation?": {
+"q": [
+"fruitdev.jpg"
+]
+},
+"What is overcrowding?": {
+"q": [
+"overcrowd.jpg"
+]
+},
+"Name the 4 methods of fruit and seed dispersal.": {
+"q": [
+"dispersal-q.jpg"
+],
+"a": [
+"dispersal-a.jpg"
+]
+},
+"What are the parts of a seed?": {
+"q": [
+"seed.jpg"
+],
+"a": [
+"s50.jpg"
+]
+},
+"Name the process: ice gains heat and turns into water.": {
+"a": [
+"s58.jpg"
+]
+},
+"What are the 3 states of water?": {
+"a": [
+"phases.jpg"
+]
+},
+"Name the process: steam or water vapour loses heat and turns into water.": {
+"a": [
+"s58.jpg"
+]
+},
+"What is the water cycle?": {
+"q": [
+"watercycle.jpg"
+]
+},
+"Name the 3 processes shown in the water cycle.": {
+"q": [
+"s61.jpg"
+],
+"a": [
+"s62.jpg"
+]
+}
+};
+const GAP_IMG={
+"Composition of air": [
+"s05.jpg"
+],
+"Respiratory systems": [
+"lungs.jpg",
+"stomata.jpg"
+],
+"Circulatory system": [
+"circparts.jpg"
+],
+"A simple circuit": [
+"circuit.jpg"
+],
+"Parts of a flower": [
+"flower.jpg"
+],
+"Pollination and fertilisation": [
+"fert.jpg"
+],
+"Overcrowding": [
+"overcrowd.jpg"
+],
+"Dispersal": [
+"dispersal-q.jpg"
+],
+"Germination": [
+"seed.jpg"
+],
+"States of water": [
+"phases.jpg"
+],
+"Changes of state": [
+"phases.jpg"
+],
+"The water cycle": [
+"watercycle.jpg"
+]
+};
+const SPRINT_IMG={
+"Which is NOT a main organ of the human respiratory system?": [
+"lungs.jpg"
+],
+"Which part of the circulatory system pumps blood?": [
+"circparts.jpg"
+],
+"Which part is the energy source in a circuit?": [
+"circuit.jpg"
+],
+"Which is a female part of a flower?": [
+"flower.jpg"
+],
+"Which is a male part of a flower?": [
+"flower.jpg"
+],
+"The pollen tube grows down the ___ to reach the ovule.": [
+"fert.jpg"
+],
+"Rain falling from clouds is called ___.": [
+"watercycle.jpg"
+],
+"Water vapour turning into water droplets in clouds is called ___.": [
+"watercycle.jpg"
+]
+};
+function pics(el,list,alt){ el.innerHTML=""; (list||[]).forEach(f=>{ const i=document.createElement("img"); i.src=IMG_DIR+f; i.alt=alt; i.loading="lazy"; el.appendChild(i); }); el.hidden=!(list&&list.length); }
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; };
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+};
+let selected = new Set(TOPICS.map(t=>t.id));
+
+/* ---------- topic chips ---------- */
+function renderChips(){
+  const box = $("#chips"); box.innerHTML="";
+  TOPICS.forEach(t=>{
+    const b=document.createElement("button");
+    b.className="chip"; b.setAttribute("aria-pressed", selected.has(t.id));
+    b.innerHTML=`<span class="theme">${t.theme}</span>${t.name}`;
+    b.onclick=()=>{ selected.has(t.id)?selected.delete(t.id):selected.add(t.id); topicsChanged(); };
+    box.appendChild(b);
+  });
+}
+$("#all").onclick=()=>{ selected=new Set(TOPICS.map(t=>t.id)); topicsChanged(); };
+$("#none").onclick=()=>{ selected=new Set(); topicsChanged(); };
+function topicsChanged(){ renderChips(); buildDeck(); buildGaps(); if(sp.running) endSprint(); showSprintStart(); }
+
+/* ---------- mode tabs ---------- */
+const MODES=["cards","gaps","sprint"];
+function setMode(m){
+  if(!MODES.includes(m)) m="cards";
+  MODES.forEach(x=>{
+    $("#tab-"+x).setAttribute("aria-selected", x===m);
+    $("#mode-"+x).hidden = x!==m;
+  });
+  if(m!=="sprint" && sp.running) endSprint();
+  if(location.hash!=="#"+m){ try{ history.replaceState(null,"","#"+m); }catch(e){} }
+  current=m;
+}
+let current="cards";
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>setMode(t.dataset.mode));
+window.addEventListener("hashchange",()=>setMode(location.hash.slice(1)));
+
+/* ---------- flashcards ---------- */
+let deck=[], fi=0, know=0, learning=[], flipped=false, reviewMode=false;
+function buildDeck(list){
+  reviewMode = !!list;
+  deck = list || CARDS.filter(c=>selected.has(c[0]));
+  fi=0; know=0; learning=[]; showCard();
+}
+function showCard(){
+  $("#fc-know").textContent=know; $("#fc-learn").textContent=learning.length;
+  $("#fc-review").hidden = learning.length===0;
+  flipped=false; $("#fc-a").hidden=true; $("#fc-hint").hidden=false; pics($("#fc-qpics"),[],""); pics($("#fc-apics"),[],"");
+  if(!deck.length){
+    $("#fc-topic").textContent=""; $("#fc-q").textContent="Choose at least one topic above to see flashcards."; $("#fc-count").textContent="";
+    ["#fc-yes","#fc-no","#fc-prev"].forEach(s=>$(s).disabled=true); $("#fc-hint").hidden=true; return;
+  }
+  if(fi>=deck.length){
+    $("#fc-topic").textContent="Deck finished";
+    $("#fc-q").textContent=`You knew ${know} of ${deck.length} cards.` + (learning.length? " Review your “still learning” cards next." : " Great work! Try the 60s Sprint.");
+    $("#fc-count").textContent=`${deck.length} / ${deck.length}`; $("#fc-hint").hidden=true;
+    ["#fc-yes","#fc-no"].forEach(s=>$(s).disabled=true); $("#fc-prev").disabled=false; return;
+  }
+  const c=deck[fi];
+  ["#fc-yes","#fc-no"].forEach(s=>$(s).disabled=false); $("#fc-prev").disabled = fi===0;
+  $("#fc-topic").textContent=TNAME[c[0]] + (reviewMode?" · review":"");
+  $("#fc-q").textContent=c[1]; $("#fc-a").innerHTML=c[2];
+  const im=CARD_IMG[c[1]]||{}; pics($("#fc-qpics"),im.q,"Picture for this question"); pics($("#fc-apics"),im.a,"Picture from the revision card"); $("#fc-apics").hidden=true;
+  $("#fc-count").textContent=`Card ${fi+1} of ${deck.length}`;
+}
+function flip(){ if(!deck.length||fi>=deck.length) return; flipped=!flipped; $("#fc-a").hidden=!flipped; $("#fc-hint").hidden=flipped; $("#fc-apics").hidden = !flipped || !$("#fc-apics").children.length; }
+$("#fc-card").onclick=flip;
+$("#fc-yes").onclick=()=>{ if(fi<deck.length){ know++; fi++; showCard(); } };
+$("#fc-no").onclick=()=>{ if(fi<deck.length){ learning.push(deck[fi]); fi++; showCard(); } };
+$("#fc-prev").onclick=()=>{ if(fi>0){ fi--; showCard(); } };
+$("#fc-shuffle").onclick=()=>{ deck=shuffle(deck); fi=0; know=0; learning=[]; showCard(); };
+$("#fc-review").onclick=()=>buildDeck(learning.slice());
+$("#fc-reset").onclick=()=>buildDeck();
+
+/* ---------- fill the gaps ---------- */
+let gaps=[], gi=0, gState=null;
+function buildGaps(){ gaps=GAPS.filter(g=>selected.has(g.t)); gi=0; renderGap(); }
+function renderGap(){
+  $("#g-result").textContent=""; $("#g-result").className="result";
+  const has=gaps.length>0;
+  ["#g-check","#g-show","#g-clear","#g-prev","#g-next"].forEach(s=>$(s).disabled=!has);
+  if(!has){ pics($("#g-pics"),[],""); $("#g-title").textContent="Choose at least one topic above."; $("#g-text").innerHTML=""; $("#g-bank").innerHTML=""; $("#g-topic").textContent=""; $("#g-count").textContent=""; return; }
+  const g=gaps[gi];
+  $("#g-topic").textContent=TNAME[g.t]; $("#g-title").textContent=g.title; pics($("#g-pics"),GAP_IMG[g.title],"Picture from the revision card");
+  $("#g-count").textContent=`Passage ${gi+1} of ${gaps.length}`;
+  $("#g-prev").disabled=gi===0; $("#g-next").disabled=gi===gaps.length-1;
+  const answers=[]; const parts=g.text.split(/\[([^\]]+)\]/);
+  const p=$("#g-text"); p.innerHTML="";
+  parts.forEach((s,i)=>{
+    if(i%2===0){ p.appendChild(document.createTextNode(s)); }
+    else{
+      const idx=answers.length; answers.push(s);
+      const b=document.createElement("button"); b.className="blank"; b.dataset.i=idx; b.innerHTML="&nbsp;";
+      b.setAttribute("aria-label","Blank "+(idx+1));
+      b.onclick=()=>blankClick(idx); p.appendChild(b);
+    }
+  });
+  const bankWords = shuffle([...new Set(answers.map(a=>a.toLowerCase()))].concat(g.extra));
+  gState={answers, fills:Array(answers.length).fill(null), active:0, bank:bankWords};
+  const bank=$("#g-bank"); bank.innerHTML="";
+  bankWords.forEach(w=>{ const b=document.createElement("button"); b.className="word"; b.textContent=w; b.onclick=()=>wordClick(w); bank.appendChild(b); });
+  paintGap();
+}
+function paintGap(){
+  document.querySelectorAll("#g-text .blank").forEach(b=>{
+    const i=+b.dataset.i; const v=gState.fills[i];
+    b.className="blank"+(i===gState.active?" active":"");
+    b.innerHTML = v? v : "&nbsp;";
+  });
+  // a word is "used up" when it fills as many blanks as it is needed (words like "poles" appear twice)
+  document.querySelectorAll("#g-bank .word").forEach(b=>{
+    const w=b.textContent; const need=gState.answers.filter(a=>a.toLowerCase()===w).length || 1;
+    const used=gState.fills.filter(f=>f===w).length;
+    b.classList.toggle("used", used>=need);
+  });
+}
+function blankClick(i){
+  if(gState.fills[i]!==null){ gState.fills[i]=null; }
+  gState.active=i; $("#g-result").textContent=""; paintGap();
+}
+function wordClick(w){
+  let i=gState.active;
+  if(i===null || gState.fills[i]!==null){ i=gState.fills.indexOf(null); }
+  if(i===-1) return;
+  gState.fills[i]=w;
+  const next=gState.fills.indexOf(null); gState.active = next===-1? null : next;
+  $("#g-result").textContent=""; paintGap();
+}
+$("#g-check").onclick=()=>{
+  let right=0;
+  document.querySelectorAll("#g-text .blank").forEach(b=>{
+    const i=+b.dataset.i; const ok=(gState.fills[i]||"")===gState.answers[i].toLowerCase();
+    if(ok) right++; b.classList.remove("active"); b.classList.add(ok?"right":"wrong");
+  });
+  const n=gState.answers.length, r=$("#g-result");
+  r.textContent = right===n ? `All ${n} correct! Well done.` : `${right} of ${n} correct. Tap a red blank to try it again.`;
+  r.className="result "+(right===n?"good":"bad");
+};
+$("#g-show").onclick=()=>{ gState.fills=gState.answers.map(a=>a.toLowerCase()); gState.active=null; paintGap(); $("#g-check").onclick(); $("#g-result").textContent="Answers shown. Read the passage aloud, then press Clear and try it from memory."; $("#g-result").className="result"; };
+$("#g-clear").onclick=()=>{ gState.fills.fill(null); gState.active=0; $("#g-result").textContent=""; paintGap(); };
+$("#g-prev").onclick=()=>{ if(gi>0){gi--; renderGap();} };
+$("#g-next").onclick=()=>{ if(gi<gaps.length-1){gi++; renderGap();} };
+
+/* ---------- sprint ---------- */
+const sp={running:false, time:60, score:0, streak:0, right:0, total:0, misses:[], pool:[], q:null, timer:null, locked:false};
+function bestKey(){ return "p5sprint-best-"+[...selected].sort().join(","); }
+function showSprintStart(){
+  $("#sp-start").hidden=false; $("#sp-play").hidden=true; $("#sp-end").hidden=true;
+  const n=SPRINT.filter(q=>selected.has(q[0])).length;
+  $("#sp-go").disabled = n===0;
+  const best=store.get(bestKey());
+  $("#sp-best").textContent = n===0 ? "Choose at least one topic above." : (best? `Best score for these topics: ${best}` : `${n} questions in these topics`);
+}
+function nextQ(){
+  if(!sp.pool.length) sp.pool=shuffle(SPRINT.filter(q=>selected.has(q[0])));
+  const q=sp.pool.pop(); sp.q=q; sp.locked=false;
+  $("#sp-topic").textContent=TNAME[q[0]]; $("#sp-q").textContent=q[1]; pics($("#sp-pics"),SPRINT_IMG[q[1]],"Picture for this question");
+  const opts = q[2]==="True"||q[2]==="False" ? TF.slice() : shuffle([q[2],...q[3]]);
+  const box=$("#sp-opts"); box.innerHTML="";
+  opts.forEach((o,i)=>{ const b=document.createElement("button"); b.className="opt"; b.innerHTML=`<kbd>${i+1}</kbd><span></span>`; b.lastChild.textContent=o; b.onclick=()=>answer(o,b); box.appendChild(b); });
+}
+function answer(o,btn){
+  if(!sp.running||sp.locked) return; sp.locked=true; sp.total++;
+  const ok=o===sp.q[2];
+  if(ok){ sp.right++; sp.streak++; sp.score+=1 + (sp.streak%5===0?1:0); btn.classList.add("right"); }
+  else{
+    sp.streak=0; btn.classList.add("wrong");
+    document.querySelectorAll("#sp-opts .opt").forEach(b=>{ if(b.lastChild.textContent===sp.q[2]) b.classList.add("right"); });
+    if(!sp.misses.some(m=>m[1]===sp.q[1])) sp.misses.push(sp.q);
+  }
+  $("#sp-score").textContent=sp.score; $("#sp-streak").textContent=sp.streak;
+  setTimeout(()=>{ if(sp.running) nextQ(); }, ok?350:1100);
+}
+function startSprint(){
+  Object.assign(sp,{running:true,time:60,score:0,streak:0,right:0,total:0,misses:[],pool:[]});
+  $("#sp-start").hidden=true; $("#sp-end").hidden=true; $("#sp-play").hidden=false;
+  $("#sp-time").textContent=60; $("#sp-score").textContent=0; $("#sp-streak").textContent=0;
+  $("#sp-fill").style.width="100%"; $("#sp-bar").classList.remove("low");
+  nextQ();
+  sp.timer=setInterval(()=>{
+    sp.time--; $("#sp-time").textContent=sp.time;
+    $("#sp-fill").style.width=(sp.time/60*100)+"%";
+    if(sp.time<=10) $("#sp-bar").classList.add("low");
+    if(sp.time<=0) endSprint(true);
+  },1000);
+}
+function endSprint(show){
+  clearInterval(sp.timer); sp.running=false;
+  if(!show) return;
+  $("#sp-play").hidden=true; $("#sp-end").hidden=false;
+  $("#sp-final").textContent=sp.score;
+  const acc = sp.total? Math.round(sp.right/sp.total*100) : 0;
+  const prev=+(store.get(bestKey())||0); let msg="";
+  if(sp.score>prev){ store.set(bestKey(), sp.score); msg = prev? " New personal best!" : ""; }
+  $("#sp-summary").textContent=`${sp.right} correct out of ${sp.total} answered (${acc}% accuracy).${msg}`;
+  const ol=$("#sp-misses"); ol.innerHTML="";
+  $("#sp-miss-wrap").hidden = sp.misses.length===0;
+  sp.misses.forEach(m=>{ const li=document.createElement("li"); li.textContent=m[1]+" → "; const s=document.createElement("span"); s.textContent=m[2]; li.appendChild(s); ol.appendChild(li); });
+}
+$("#sp-go").onclick=startSprint; $("#sp-again").onclick=startSprint;
+
+/* ---------- keyboard ---------- */
+document.addEventListener("keydown",e=>{
+  if(current==="sprint" && sp.running && /^[1-4]$/.test(e.key)){
+    const b=document.querySelectorAll("#sp-opts .opt")[+e.key-1]; if(b){ b.click(); e.preventDefault(); }
+  }
+  if(current==="cards" && e.key===" " && document.activeElement && document.activeElement.id!=="fc-card" && document.activeElement.tagName!=="BUTTON"){ flip(); e.preventDefault(); }
+});
+
+/* ---------- init ---------- */
+renderChips(); buildDeck(); buildGaps(); showSprintStart();
+setMode(location.hash.slice(1) || "cards");
+</script>
+</body>
+</html>
